@@ -9,12 +9,26 @@ sap.ui.define(
   (Controller, FilerobotImageEditor, MessageToast) => {
     "use strict";
 
+    let filerobotImageEditor2;
+
     return Controller.extend("ui5.imgeditor.controller.App", {
       onInit() {},
 
       onBeforeRendering() {},
 
       onAfterRendering() {},
+
+      _getFileSizeInBase64: function (sBase64String) {
+        const padding = sBase64String.endsWith("==")
+          ? 2
+          : sBase64String.endsWith("=")
+          ? 1
+          : 0;
+        const sizeInBytes = (sBase64String.length / 4) * 3 - padding;
+        const sizeInKB = sizeInBytes / 1024;
+        const sizeInMB = sizeInKB / 1000;
+        return { sizeInBytes, sizeInKB, sizeInMB };
+      },
 
       onUpload: function (oEvent) {
         var oFileUploader = this.getView().byId("myFileUploader");
@@ -50,10 +64,11 @@ sap.ui.define(
         oReader.readAsDataURL(oFile);
       },
 
-      onOpenImgEditor: function (oImg) {
+      onOpenImgEditor: function (sImg) {
+        const _getFileSizeInBase64 = this._getFileSizeInBase64;
         const { TABS, TOOLS } = FilerobotImageEditor;
         const config = {
-          source: oImg,
+          source: sImg,
           onSave: function (editedImageObject, designState) {
             var oLink = document.createElement("a");
 
@@ -61,12 +76,27 @@ sap.ui.define(
             oLink.download = editedImageObject.fullName;
             oLink.click();
 
-            console.log("saved", editedImageObject, designState);
+            console.log("Saved", editedImageObject, designState);
+
+            // let base64StringOnSave = String(
+            //   editedImageObject.imageBase64
+            // ).slice(21); // remove "data:image/png;base64,"
+            // console.log(_getFileSizeInBase64(base64StringOnSave));
+          },
+          onBeforeSave: function (imageFileInfo) {
+            // console.log("BeforeSave", imageFileInfo);
+          },
+          onModify: function (currentImageDesignState) {
+            // console.log("Modify", currentImageDesignState);
+            // let base64String = currentImageDesignState.imgSrc.slice(21); // remove "data:image/png;base64,"
+            // console.log(_getFileSizeInBase64(base64String));
           },
           annotationsCommon: {
-            fill: "#ff0000",
+            fill: "#00000000",
+            stroke: "#ff0000",
+            strokeWidth: 2,
           },
-          Text: { text: "Filerobot..." },
+          Text: { text: "Text..." },
           Rotate: { angle: 90, componentType: "slider" },
           translations: {
             profile: "Profile",
@@ -117,16 +147,18 @@ sap.ui.define(
               },
             ],
           },
-          tabsIds: [TABS.ADJUST, TABS.ANNOTATE, TABS.WATERMARK], // or ['Adjust', 'Annotate', 'Watermark']
+          tabsIds: [TABS.ADJUST, TABS.ANNOTATE], // or ['Adjust', 'Annotate', 'Watermark']
           defaultTabId: TABS.ANNOTATE, // or 'Annotate'
-          defaultToolId: TOOLS.TEXT, // or 'Text'
+          defaultToolId: TOOLS.PEN, // or 'Text'
+          defaultSavedImageName: "image",
         };
 
         let oControl = this.getView().byId("imgContainer");
         let oDomRef = oControl.getDomRef();
         console.log(oControl);
         console.log(oDomRef);
-        const filerobotImageEditor = new FilerobotImageEditor(oDomRef, config);
+        const filerobotImageEditor = (filerobotImageEditor2 =
+          new FilerobotImageEditor(oDomRef, config));
 
         filerobotImageEditor.render({
           onClose: (closingReason) => {
@@ -134,6 +166,8 @@ sap.ui.define(
             filerobotImageEditor.terminate();
           },
         });
+
+        console.log(filerobotImageEditor.getCurrentImgData());
       },
     });
   }

@@ -39,7 +39,10 @@
                                         class="sapUiSmallMarginBegin"
                                     />
                                 </l:HorizontalLayout>
-                                <html:div id="imgContainer" />
+                                <html:div
+                                    id="imgContainer"
+                                    class="sapUiEditorHeight"
+                                />
                             </IconTabFilter>
                             <IconTabFilter
                                 key="workorders"
