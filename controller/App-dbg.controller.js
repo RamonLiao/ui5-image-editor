@@ -149,7 +149,7 @@ sap.ui.define(
           },
           tabsIds: [TABS.ADJUST, TABS.ANNOTATE], // or ['Adjust', 'Annotate', 'Watermark']
           defaultTabId: TABS.ANNOTATE, // or 'Annotate'
-          defaultToolId: TOOLS.PEN, // or 'Text'
+          defaultToolId: TOOLS.ELLIPSE, // or 'Text'
           defaultSavedImageName: "image",
         };
 
