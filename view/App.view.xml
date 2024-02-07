@@ -6,6 +6,7 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns:core="sap.ui.core"
     xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:f="sap.f"
 >
     <App
         class="myAppDemoWT"
@@ -21,37 +22,59 @@
                     >
                         <items>
                             <IconTabFilter
-                                key="main"
-                                text="Image Editor"
+                                key="carousel"
+                                text="Image Carousel"
                             >
-                                <l:HorizontalLayout>
+                                <HBox>
                                     <u:FileUploader
-                                        id="fileUploader"
-                                        name="myFileUpload"
-                                        tooltip="Upload your file to the local server"
-                                        uploadComplete="onUploadComplete"
+                                        id="fileUploaderCarousel"
+                                        typeMissmatch="typeMissmatch"
+                                        change="onUploadAddImage"
                                         mimeType="image/*"
                                     />
-                                    <!-- fileType="jpg,jpeg,png,bmp,gif" -->
                                     <Button
-                                        text="Upload Image"
-                                        press="onUploadPress"
+                                        text="SAVE ALL"
+                                        press="onSaveAll"
                                         class="sapUiSmallMarginBegin"
                                     />
-                                </l:HorizontalLayout>
+                                </HBox>
+                                <HBox
+                                    justifyContent="Center"
+                                    renderType="Bare"
+                                >
+                                    <Panel
+                                        id="carouselContainer"
+                                        height="auto"
+                                        backgroundDesign="Transparent"
+                                    >
+                                        <Carousel
+                                            id="carouselSample"
+                                            loop="true"
+                                            class="sapUiContentPadding"
+                                        >
+                                            <customLayout>
+                                                <CarouselLayout
+                                                    visiblePagesCount="{settings>/pagesCount}"
+                                                />
+                                            </customLayout>
+                                        </Carousel>
+                                    </Panel>
+                                </HBox>
                                 <html:div
                                     id="imgContainer"
                                     class="sapUiEditorHeight"
                                 />
                             </IconTabFilter>
                             <IconTabFilter
-                                key="workorders"
+                                key="main"
                                 text="Upload and Show Image"
                             >
                                 <u:FileUploader
                                     id="myFileUploader"
                                     typeMissmatch="typeMissmatch"
-                                    change="onUpload"
+                                    change="onUploadnShow"
+                                    buttonOnly="true"
+                                    mimeType="image/*"
                                 />
                                 <Panel id="myPanel" />
                             </IconTabFilter>

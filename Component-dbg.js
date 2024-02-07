@@ -4,11 +4,16 @@ sap.ui.loader.config({
     "custom/FilerobotImageEditor":
       // "https://scaleflex.cloudimg.io/v7/plugins/filerobot-image-editor/latest/filerobot-image-editor.min",
       "./lib/filerobot-image-editor.min",
+    "custom/JSZip": "./lib/jszip.min",
   },
   shim: {
     "custom/FilerobotImageEditor": {
       amd: true,
       exports: "FilerobotImageEditor",
+    },
+    "custom/JSZip": {
+      amd: true,
+      exports: "JSZip",
     },
   },
 });

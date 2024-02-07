@@ -1,3 +1,9 @@
 .sapUiEditorHeight {
   height: 600px;
 }
+
+/* div:has(.sapUiIconCentre) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+} */
