@@ -6,19 +6,19 @@ sap.ui.define(
     "custom/FilerobotImageEditor",
     "sap/ui/Device",
     "sap/ui/model/json/JSONModel",
+    "sap/m/MessageToast",
     "sap/m/Image",
     "sap/ui/core/Icon",
     "custom/JSZip",
-    "sap/m/MessageToast",
   ],
   (
     Controller,
     FilerobotImageEditor,
     Device,
     JSONModel,
+    MessageToast,
     Image,
-    JSZip,
-    MessageToast
+    JSZip
   ) => {
     "use strict";
 
@@ -262,6 +262,8 @@ sap.ui.define(
             console.log("Saved", id);
           }
 
+          MessageToast.show("All Images Saved");
+
           // ----- Zip File and Download -----
           // const zip = new JSZip();
 
@@ -285,8 +287,6 @@ sap.ui.define(
 
           //   URL.revokeObjectURL(sUrl);
           // });
-
-          MessageToast.show("All Images Saved");
         } else {
           MessageToast.show("No Images to be saved");
         }
