@@ -17,7 +17,6 @@ sap.ui.define(
     Device,
     JSONModel,
     Image,
-    Icon,
     JSZip,
     MessageToast
   ) => {
@@ -39,13 +38,12 @@ sap.ui.define(
         }
 
         let oSettingsModel = new JSONModel({ pagesCount: iPagesCount });
-        // oProductsModel.setSizeLimit(6);
         this.getView().setModel(oSettingsModel, "settings");
 
         let oimgEditorsModel = new JSONModel(imgEditors);
         this.getView().setModel(oimgEditorsModel, "imgEditors");
 
-        this._setNumberOfImagesInCarousel(1);
+        this._initialiseCarousel();
       },
 
       onBeforeRendering() {},
@@ -112,21 +110,10 @@ sap.ui.define(
         const config = {
           source: sImg,
           onSave: function (editedImageObject, designState) {
-            let oLink = document.createElement("a");
+            this._saveAll(imgEditors);
+          }.bind(this),
 
-            oLink.href = editedImageObject.imageBase64;
-            oLink.download = editedImageObject.fullName;
-            oLink.click();
-
-            console.log("Saved", editedImageObject, designState);
-          },
-          onBeforeSave: function (imageFileInfo) {
-            // console.log("BeforeSave", imageFileInfo);
-            // let base64StringOnSave = String(
-            //   editedImageObject.imageBase64
-            // ).slice(21); // remove "data:image/png;base64,"
-            // console.log(_getFileSizeInBase64(base64StringOnSave));
-          },
+          onBeforeSave: function (imageFileInfo) {},
 
           annotationsCommon: {
             fill: "#00000000",
@@ -189,37 +176,24 @@ sap.ui.define(
           defaultToolId: TOOLS.ELLIPSE, // or 'Text'
           defaultSavedImageName: "image",
           defaultSavedImageType: "jpg",
+          // defaultSavedImageQuality: 0.5, // possible values: [0.1 - 1.0]
         };
 
         let oControl = this.getView().byId("imgContainer");
         let oDomRef = oControl.getDomRef();
         this.getView().byId("imgContainer").destroyContent();
-        // console.log("editor control", oControl);
-        // console.log("editor dom ref", oDomRef);
         filerobotImageEditor = new FilerobotImageEditor(oDomRef, config);
 
         filerobotImageEditor.render({
           onClose: (closingReason) => {
-            // console.log("Closing reason", closingReason);
             filerobotImageEditor.terminate();
           },
+
+          // Get modified info during editing
           onModify: function (currentImageDesignState) {
-            // console.log("modifying", sImgId);
-            let oImg = document.getElementById(sImgId);
-
-            // console.log("oImg", oImg);
-            // console.log("Modify", currentImageDesignState);
-            // let base64String = currentImageDesignState.imgSrc.slice(21); // remove "data:image/png;base64,"
-            // console.log(_getFileSizeInBase64(base64String));
-
+            // Get modified image base64
             let oNewImg = filerobotImageEditor.getCurrentImgData();
             let sNewImg = oNewImg.imageData.imageBase64;
-            // console.log("CurrentImgData", oNewImg);
-
-            // console.log(
-            //   "Image Modified:",
-            //   !(oImg.src == sNewImg) ? true : false
-            // );
 
             // Update modified image to image model
             imgEditors[sImgId] = sNewImg;
@@ -231,14 +205,17 @@ sap.ui.define(
       },
 
       // Initialise Carousel Container
-      _setNumberOfImagesInCarousel: function (iNumberOfImages) {
-        if (!iNumberOfImages || iNumberOfImages < 1 || iNumberOfImages > 9) {
-          return;
-        }
+      _initialiseCarousel: function () {
         let oCarousel = this.getView().byId("carouselSample");
         oCarousel.destroyPages();
 
-        oCarousel.setShowPageIndicator(false);
+        if (Device.system.desktop) {
+          oCarousel.setShowPageIndicator(false);
+        } else if (Device.system.tablet || Device.system.phone) {
+          oCarousel.setShowPageIndicator(true);
+          oCarousel.setPageIndicatorBackgroundDesign("Translucent"); // [Solid, Translucent, Transparent]
+          oCarousel.setPageIndicatorBorderDesign("None"); // [None, Solid]
+        }
       },
 
       // Add image to Carousel
@@ -249,21 +226,21 @@ sap.ui.define(
         this.getView().getModel("imgEditors").setData(imgEditors);
 
         let oCarousel = this.getView().byId("carouselSample");
-        let oImage = new sap.m.Image(sImgId, {
+        let oImage = new Image(sImgId, {
           src: `{imgEditors>/${sImgId}}`,
           height: "8rem",
         });
         oImage.attachPress(this.onEditImage.bind(this));
 
-        oCarousel.addPage(oImage);
+        oCarousel.addPage(oImage); // Add image to carousel
+        this.onOpenImgEditor(sBase64Image, sImgId); // Open image editor
 
         imgCount++;
       },
 
+      // Click an image to open image editor
       onEditImage(oEvent) {
-        // console.log("image editing");
         let sImgId = oEvent.getParameter("id");
-        // console.log("clicked", sImgId, currentImgId);
         if (currentImgId === sImgId) {
           return;
         }
@@ -272,28 +249,51 @@ sap.ui.define(
         this.onOpenImgEditor(sBase64Image, sImgId);
       },
 
+      _saveAll: function (oEditors) {
+        if (Object.keys(oEditors).length > 0) {
+          // ----- Download All Images Individually-----
+          for (const id in oEditors) {
+            let oLink = document.createElement("a");
+
+            oLink.href = oEditors[id];
+            oLink.download = id;
+            oLink.click();
+
+            console.log("Saved", id);
+          }
+
+          // ----- Zip File and Download -----
+          // const zip = new JSZip();
+
+          // for (const id in oEditors) {
+          //   const base64StringArr = String(oEditors[id]).split(",");
+
+          //   // let base64StringOnSave = String(oEditors[id]).slice(21); // remove "data:image/png;base64,"
+          //   let base64StringOnSave = base64StringArr[1];
+          //   zip.file(id + ".jpg", base64StringOnSave, {
+          //     base64: true,
+          //   });
+          // }
+
+          // zip.generateAsync({ type: "blob" }).then(function (blob) {
+          //   // Create a link and download the blob
+          //   const sUrl = URL.createObjectURL(blob);
+          //   const oLink = document.createElement("a");
+          //   oLink.href = sUrl;
+          //   oLink.download = "images.zip";
+          //   oLink.click();
+
+          //   URL.revokeObjectURL(sUrl);
+          // });
+
+          MessageToast.show("All Images Saved");
+        } else {
+          MessageToast.show("No Images to be saved");
+        }
+      },
+
       onSaveAll: function (oEvent) {
-        // const zip = new JSZip();
-
-        // for (const id in imgEditors) {
-        //   let base64StringOnSave = String(imgEditors[id]).slice(21); // remove "data:image/png;base64,"
-        //   zip.file(id + ".jpg", base64StringOnSave, {
-        //     base64: true,
-        //   });
-        // }
-        // zip.generateAsync({ type: "base64" }).then(function (base64) {
-        //   console.log(base64);
-        //   // Create a link and download the blob
-        //   let oLink = document.createElement("a");
-        //   oLink.href = URL.createObjectURL(base64);
-        //   // oLink.href = base64;
-        //   oLink.download = "images.zip";
-        //   oLink.click();
-
-        //   MessageToast("All Images Saved");
-        // });
-
-        MessageToast("All Images Saved");
+        this._saveAll(imgEditors);
       },
     });
   }
